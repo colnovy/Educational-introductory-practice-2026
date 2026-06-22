@@ -75,3 +75,50 @@ if bisection_results:
     df_bisection = pd.DataFrame(bisection_results)
     print("\nТаблица итераций метода бисекции:")
     print(df_bisection.to_string(index=False))
+
+print("\n\nМЕТОД НЬЮТОНА (КАСАТЕЛЬНЫХ)")
+df_expr = sp.diff(expr, x)
+df = sp.lambdify(x, df_expr, 'numpy')
+
+print(f"\nПроизводная функции: f'(x) = {df_expr}")
+
+def newton_method(f, df, x0, eps, max_iter=100):
+
+    results = []
+    x_n = x0
+    iteration = 0
+
+    while iteration < max_iter:
+        fx = f(x_n)
+        dfx = df(x_n)
+
+        results.append({
+            'Итерация': iteration + 1,
+            'x_n': x_n,
+            'f(x_n) (невязка)': fx,
+            "f'(x_n)": dfx
+        })
+
+        if abs(fx) < eps:
+            return results
+
+        if abs(dfx) < 1e-10:
+            print("Ошибка: производная равна нулю, метод неприменим")
+            return None
+
+        x_next = x_n - fx / dfx
+        x_n = x_next
+        iteration += 1
+
+    print(f"Достигнуто максимальное число итераций ({max_iter})")
+    return results
+
+x0 = float(input("Введите начальное приближение x0: "))
+
+newton_results = newton_method(f, df, x0, eps)
+
+if newton_results:
+    df_newton = pd.DataFrame(newton_results)
+    print("\nТаблица итераций метода Ньютона:")
+    print(df_newton.to_string(index=False))
+
