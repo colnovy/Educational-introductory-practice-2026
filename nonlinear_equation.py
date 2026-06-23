@@ -122,3 +122,45 @@ if newton_results:
     print("\nТаблица итераций метода Ньютона:")
     print(df_newton.to_string(index=False))
 
+print("\n\nМЕТОД СЕКУЩЕЙ")
+def secant_method(f, x0, x1, eps, max_iter=100):
+
+    results = []
+    iteration = 0
+
+    while iteration < max_iter:
+        fx0 = f(x0)
+        fx1 = f(x1)
+
+        results.append({
+            'Итерация': iteration + 1,
+            'x_{n-1}': x0,
+            'x_n': x1,
+            'f(x_n) (невязка)': fx1
+        })
+
+        if abs(fx1) < eps:
+            return results
+
+        if abs(fx1 - fx0) < 1e-10:
+            print("Ошибка: деление на ноль, метод неприменим")
+            return None
+
+        x_next = x1 - fx1 * (x1 - x0) / (fx1 - fx0)
+
+        x0 = x1
+        x1 = x_next
+        iteration += 1
+
+    print(f"Достигнуто максимальное число итераций ({max_iter})")
+    return results
+
+x0_sec = float(input("Введите первое начальное приближение x0: "))
+x1_sec = float(input("Введите второе начальное приближение x1: "))
+
+secant_results = secant_method(f, x0_sec, x1_sec, eps)
+
+if secant_results:
+    df_secant = pd.DataFrame(secant_results)
+    print("\nТаблица итераций метода секущих:")
+    print(df_secant.to_string(index=False))
