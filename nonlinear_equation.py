@@ -164,3 +164,137 @@ if secant_results:
     df_secant = pd.DataFrame(secant_results)
     print("\nТаблица итераций метода секущих:")
     print(df_secant.to_string(index=False))
+
+def plot_bisection(f, results, ax):
+
+    a_init = results[0]['a']
+    b_init = results[0]['b']
+    x_min = a_init - 0.5
+    x_max = b_init + 0.5
+    x_vals = np.linspace(x_min, x_max, 400)
+    y_vals = f(x_vals)
+
+    ax.plot(x_vals, y_vals, 'darkgray', linewidth=2, label='f(x)')
+    ax.axhline(0, color='black', linewidth=1)
+
+    colors = plt.cm.coolwarm(np.linspace(0, 1, len(results)))
+
+    for i, res in enumerate(results):
+        a, b, c = res['a'], res['b'], res['c (середина)']
+        fc = res['f(c) (невязка)']
+
+        ax.axvspan(a, b, alpha=0.1, color=colors[i])
+
+        ax.plot(c, fc, 'ro', markersize=6)
+        ax.plot(c, 0, 'rv', markersize=8)
+        ax.annotate(f'c{i + 1}', (c, 0), textcoords="offset points",
+                    xytext=(0, -15), ha='center', fontsize=8)
+
+    ax.set_title('Метод бисекции')
+    ax.set_xlabel('x')
+    ax.set_ylabel('f(x)')
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+
+def plot_newton(f, df, results, ax):
+
+    x_points = [res['x_n'] for res in results]
+    x_min = min(x_points) - 1
+    x_max = max(x_points) + 1
+    x_vals = np.linspace(x_min, x_max, 400)
+    y_vals = f(x_vals)
+
+    ax.plot(x_vals, y_vals, 'darkgray', linewidth=2, label='f(x)')
+    ax.axhline(0, color='black', linewidth=1)
+
+    colors = plt.cm.autumn(np.linspace(0, 1, len(results)))
+
+    for i, res in enumerate(results):
+        x_n = res['x_n']
+        fx = res['f(x_n) (невязка)']
+        dfx = res["f'(x_n)"]
+
+        ax.plot(x_n, fx, 'o', color=colors[i], markersize=8)
+
+        if i < len(results) - 1:
+            x_next = results[i + 1]['x_n']
+        else:
+            x_next = x_n - fx / dfx if abs(dfx) > 1e-10 else x_n
+
+        x_tangent = np.linspace(x_n, x_next, 50)
+        y_tangent = fx + dfx * (x_tangent - x_n)
+        ax.plot(x_tangent, y_tangent, '--', color=colors[i], linewidth=1.5, alpha=0.7)
+
+        ax.plot(x_next, 0, 'v', color=colors[i], markersize=8)
+        ax.annotate(f'x{i + 1}', (x_next, 0), textcoords="offset points",
+                    xytext=(0, -15), ha='center', fontsize=8, color=colors[i])
+
+    ax.set_title('Метод Ньютона')
+    ax.set_xlabel('x')
+    ax.set_ylabel('f(x)')
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+
+def plot_secant(f, results, ax):
+
+    x_points = [res['x_n'] for res in results]
+    x_prev = results[0]['x_{n-1}']
+    all_x = [x_prev] + x_points
+    x_min = min(all_x) - 1
+    x_max = max(all_x) + 1
+    x_vals = np.linspace(x_min, x_max, 400)
+    y_vals = f(x_vals)
+
+    ax.plot(x_vals, y_vals, 'darkgray', linewidth=2, label='f(x)')
+    ax.axhline(0, color='black', linewidth=1)
+
+    colors = plt.cm.viridis(np.linspace(0, 1, len(results)))
+
+    for i, res in enumerate(results):
+        x_prev_i = res['x_{n-1}']
+        x_n = res['x_n']
+        fx_prev = f(x_prev_i)
+        fx_n = res['f(x_n) (невязка)']
+
+        ax.plot(x_prev_i, fx_prev, 'o', color=colors[i], markersize=6, alpha=0.6)
+        ax.plot(x_n, fx_n, 'o', color=colors[i], markersize=8)
+
+        if i < len(results) - 1:
+            x_next = results[i + 1]['x_n']
+        else:
+
+            if abs(fx_n - fx_prev) > 1e-10:
+                x_next = x_n - fx_n * (x_n - x_prev_i) / (fx_n - fx_prev)
+            else:
+                x_next = x_n
+
+        x_secant = np.linspace(x_prev_i, x_next, 50)
+
+        if abs(x_n - x_prev_i) > 1e-10:
+            slope = (fx_n - fx_prev) / (x_n - x_prev_i)
+            y_secant = fx_prev + slope * (x_secant - x_prev_i)
+            ax.plot(x_secant, y_secant, '--', color=colors[i], linewidth=1.5, alpha=0.7)
+
+        ax.plot(x_next, 0, 'v', color=colors[i], markersize=8)
+        ax.annotate(f'x{i + 1}', (x_next, 0), textcoords="offset points",
+                    xytext=(0, -15), ha='center', fontsize=8, color=colors[i])
+
+    ax.set_title('Метод секущих')
+    ax.set_xlabel('x')
+    ax.set_ylabel('f(x)')
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+if bisection_results and newton_results and secant_results:
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+    plot_bisection(f, bisection_results, axes[0])
+    plot_newton(f, df, newton_results, axes[1])
+    plot_secant(f, secant_results, axes[2])
+
+    plt.tight_layout()
+    plt.show()
+else:
+    print("Графики не могут быть построены, так как не все методы отработали успешно.")
