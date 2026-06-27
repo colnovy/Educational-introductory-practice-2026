@@ -298,3 +298,75 @@ if bisection_results and newton_results and secant_results:
     plt.show()
 else:
     print("Графики не могут быть построены, так как не все методы отработали успешно.")
+
+import time
+
+def measure_time(func, *args, **kwargs):
+    start = time.perf_counter()
+    result = func(*args, **kwargs)
+    end = time.perf_counter()
+    return result, end - start
+
+bis_res, bis_time = measure_time(bisection_method, f, a, b, eps)
+new_res, new_time = measure_time(newton_method, f, df, x0, eps)
+sec_res, sec_time = measure_time(secant_method, f, x0_sec, x1_sec, eps)
+
+comparison_data = {
+    'Метод': ['Бисекция', 'Ньютона', 'Секущих'],
+    'Количество итераций': [
+        len(bis_res) if bis_res else 'Ошибка',
+        len(new_res) if new_res else 'Ошибка',
+        len(sec_res) if sec_res else 'Ошибка'
+    ],
+    'Время выполнения (мс)': [
+        f"{bis_time * 1000:.4f}" if bis_res else 'Ошибка',
+        f"{new_time * 1000:.4f}" if new_res else 'Ошибка',
+        f"{sec_time * 1000:.4f}" if sec_res else 'Ошибка'
+    ],
+    'Найденный корень': [
+        f"{bis_res[-1]['c (середина)']:.6f}" if bis_res else 'Ошибка',
+        f"{new_res[-1]['x_n']:.6f}" if new_res else 'Ошибка',
+        f"{sec_res[-1]['x_n']:.6f}" if sec_res else 'Ошибка'
+    ],
+    'Финальная невязка |f(x)|': [
+        f"{abs(bis_res[-1]['f(c) (невязка)']):.2e}" if bis_res else 'Ошибка',
+        f"{abs(new_res[-1]['f(x_n) (невязка)']):.2e}" if new_res else 'Ошибка',
+        f"{abs(sec_res[-1]['f(x_n) (невязка)']):.2e}" if sec_res else 'Ошибка'
+    ]
+}
+
+df_comparison = pd.DataFrame(comparison_data)
+print("\nТаблица сравнения:")
+print(df_comparison.to_string(index=False))
+
+if bis_res and new_res and sec_res:
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    bis_errors = [abs(res['f(c) (невязка)']) for res in bis_res]
+    new_errors = [abs(res['f(x_n) (невязка)']) for res in new_res]
+    sec_errors = [abs(res['f(x_n) (невязка)']) for res in sec_res]
+
+    bis_iters = list(range(1, len(bis_errors) + 1))
+    new_iters = list(range(1, len(new_errors) + 1))
+    sec_iters = list(range(1, len(sec_errors) + 1))
+
+    ax.semilogy(bis_iters, bis_errors, 'o-', linewidth=2, markersize=6,
+                label=f'Бисекция ({len(bis_errors)} ит.)', color='royalblue')
+    ax.semilogy(new_iters, new_errors, 's-', linewidth=2, markersize=6,
+                label=f'Ньютона ({len(new_errors)} ит.)', color='red')
+    ax.semilogy(sec_iters, sec_errors, '^-', linewidth=2, markersize=6,
+                label=f'Секущих ({len(sec_errors)} ит.)', color='purple')
+
+    ax.axhline(eps, color='black', linestyle='--', linewidth=1,
+               label=f'Точность ε = {eps}')
+
+    ax.set_xlabel('Номер итерации', fontsize=12)
+    ax.set_ylabel('Невязка |f(x)| (лог. шкала)', fontsize=12)
+    ax.set_title('Сравнение скорости сходимости методов', fontsize=14, fontweight='bold')
+    ax.legend(fontsize=11)
+    ax.grid(True, alpha=0.3, which='both')
+
+    plt.tight_layout()
+    plt.show()
+else:
+    print("Не все методы отработали успешно, график сходимости не может быть построен.")
