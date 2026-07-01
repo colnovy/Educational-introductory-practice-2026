@@ -4,6 +4,8 @@
 - Установить Docker (Доступ: https://www.docker.com/products/docker-desktop/).
 - После установки запустить Docker Desktop.
 
+Скачать файл `equation-solver.tar`: https://github.com/colnovy/Educational-introductory-practice-2026/releases/download/equation-solver/equation-solver.tar
+
 Открыть терминал (PowerShell, CMD или Terminal) в папке с файлом `equation-solver.tar` и выполнить:
 
 ```
